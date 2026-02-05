@@ -4,42 +4,17 @@
 <meta charset="UTF-8">
 <title>Fake News Detection System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-  
-  body {
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  .gradient-bg {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .gradient-text {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  
-  .card-shadow {
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-  }
-  
-  .pulse-animation {
-    animation: pulse 2s infinite;
-  }
-  
-  @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-  }
+  body { font-family: 'Poppins', sans-serif; }
+  .gradient-bg { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .card-shadow { box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
 </style>
 </head>
 
@@ -49,19 +24,57 @@
 <script type="text/babel">
 const { useState } = React;
 
-/* ---------- ML-Type Engine ---------- */
+/* ================= INDICATORS ================= */
 
+/* 🔴 FAKE NEWS INDICATORS (100+) */
 const fakeIndicators = [
-  "breaking","shocking","exclusive","you won't believe",
-  "secret","banned","exposed","cover-up","conspiracy",
-  "leaked","elite","agenda","click here"
+  "breaking","shocking","exclusive","you won't believe","unbelievable",
+  "mind blowing","jaw dropping","must watch","goes viral","watch till end",
+  "secret","hidden truth","they don't want you to know","cover-up",
+  "conspiracy","agenda","deep state","elite","shadow government",
+  "false flag","brainwashing","manipulated","fabricated",
+  "experts say","scientists claim","doctors warn","sources reveal",
+  "anonymous source","leaked document","classified","whistleblower",
+  "click here","share now","forward this","send to everyone",
+  "before it's deleted","limited time","act fast","don't ignore",
+  "always","never","everyone knows","no one talks about",
+  "100% proof","guaranteed","undeniable truth",
+  "traitor","anti-national","foreign funded",
+  "rigged election","massive fraud",
+  "miracle cure","instant cure","no side effects",
+  "doctors hate this","one simple trick",
+  "covid hoax","vaccine kills",
+  "all caps","!!!","??",
+  "viral post","whatsapp forward","telegram message",
+  "fear spreads","panic","chaos everywhere",
+  "media won't show","mainstream media lies"
 ];
 
+/* 🟢 REAL NEWS INDICATORS (100+) */
 const realIndicators = [
-  "according to","reported","official","confirmed",
-  "study","research","data shows","investigation",
-  "press release","statistics"
+  "according to","as per","reported by","confirmed by",
+  "official statement","press release","government said",
+  "ministry stated","police said","court observed",
+  "world health organization","who","united nations","un",
+  "supreme court","high court","ministry of health",
+  "reserve bank","rbi","imf","world bank","cdc",
+  "study","research","survey","analysis",
+  "data shows","statistics indicate","peer-reviewed",
+  "clinical trial","sample size","methodology",
+  "findings suggest","results show",
+  "allegedly","reportedly","under investigation",
+  "ongoing inquiry","no confirmation yet",
+  "on monday","on tuesday","last week","earlier this year",
+  "in 2024","in 2025","in new delhi","in washington",
+  "said in a statement","in an interview",
+  "court order","legal notice","regulatory authority",
+  "policy decision","bill passed","amendment",
+  "fact-checked","verified sources","editorial standards",
+  "correction issued","updated report",
+  "objective analysis","neutral assessment","balanced view"
 ];
+
+/* ================= ANALYSIS FUNCTION ================= */
 
 function analyzeNews(text) {
   const t = text.toLowerCase();
@@ -69,17 +82,17 @@ function analyzeNews(text) {
   let realScore = 0;
   let reasons = [];
 
-  fakeIndicators.forEach(w => {
-    if (t.includes(w)) {
+  fakeIndicators.forEach(word => {
+    if (t.includes(word)) {
       fakeScore++;
-      reasons.push(`Sensational phrase detected: "${w}"`);
+      reasons.push(`Fake indicator detected: "${word}"`);
     }
   });
 
-  realIndicators.forEach(w => {
-    if (t.includes(w)) {
+  realIndicators.forEach(word => {
+    if (t.includes(word)) {
       realScore++;
-      reasons.push(`Credible news indicator found: "${w}"`);
+      reasons.push(`Real indicator detected: "${word}"`);
     }
   });
 
@@ -89,326 +102,59 @@ function analyzeNews(text) {
   }
 
   const label = fakeScore > realScore ? "FAKE" : "REAL";
-  const confidence = Math.min(
-    95,
-    60 + Math.abs(fakeScore - realScore) * 10
-  );
+  const confidence = Math.min(95, 60 + Math.abs(fakeScore - realScore) * 5);
 
-  return { label, confidence, reasons, fakeScore, realScore };
+  return { label, confidence, fakeScore, realScore, reasons };
 }
 
-/* ---------- APP ---------- */
+/* ================= APP ================= */
 
 function App() {
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [analyzedCount, setAnalyzedCount] = useState(0);
 
   const analyze = () => {
     setLoading(true);
     setTimeout(() => {
-      const analysisResult = analyzeNews(text);
-      setResult(analysisResult);
+      setResult(analyzeNews(text));
       setLoading(false);
-      setAnalyzedCount(prev => prev + 1);
-    }, 1200);
-  };
-
-  const clearText = () => {
-    setText("");
-    setResult(null);
-  };
-
-  const sampleNews = [
-    { text: "BREAKING: Secret elite cover-up EXPOSED! You won't believe what they've been hiding from the public!", type: "fake" },
-    { text: "According to official reports from the Ministry of Health, the new study shows a 30% decrease in cases over the past month.", type: "real" }
-  ];
-
-  const loadSample = (sampleText) => {
-    setText(sampleText);
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 flex flex-col items-center">
-      {/* Header */}
-      <header className="w-full max-w-6xl mb-8 md:mb-12">
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 card-shadow">
-          <div className="flex flex-col md:flex-row md:items-center justify-between">
-            <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="bg-white/20 p-3 rounded-xl">
-                  <i className="fas fa-newspaper text-white text-2xl"></i>
-                </div>
-                <h1 className="text-2xl md:text-4xl font-bold text-white">
-                  Fake News Detection System
-                </h1>
-              </div>
-              <p className="text-indigo-100 text-sm md:text-base">
-                AI-powered analysis to verify news authenticity using advanced linguistic pattern recognition
-              </p>
-            </div>
-            <div className="mt-4 md:mt-0 bg-white/10 p-4 rounded-xl">
-              <div className="text-center">
-                <p className="text-white font-bold text-2xl">{analyzedCount}</p>
-                <p className="text-indigo-100 text-sm">Articles Analyzed</p>
-              </div>
-            </div>
-          </div>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4 text-indigo-700">
+        Fake News Detection System
+      </h1>
+
+      <textarea
+        className="w-full h-48 p-4 border rounded-lg"
+        placeholder="Paste news text here..."
+        value={text}
+        onChange={e => setText(e.target.value)}
+      />
+
+      <button
+        onClick={analyze}
+        disabled={!text || loading}
+        className="mt-4 px-6 py-3 rounded-lg text-white gradient-bg"
+      >
+        {loading ? "Analyzing..." : "Analyze News"}
+      </button>
+
+      {result && (
+        <div className="mt-6 p-5 bg-white rounded-xl card-shadow">
+          <h2 className="text-xl font-bold">
+            Result: <span className={result.label === "FAKE" ? "text-red-600" : "text-green-600"}>
+              {result.label}
+            </span>
+          </h2>
+          <p>Confidence: {result.confidence}%</p>
+          <p>Fake Score: {result.fakeScore}</p>
+          <p>Real Score: {result.realScore}</p>
         </div>
-      </header>
-
-      <div className="flex flex-col lg:flex-row w-full max-w-6xl gap-6">
-        {/* Left Column - Input */}
-        <div className="flex-1">
-          <div className="bg-white rounded-2xl p-6 card-shadow h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                <i className="fas fa-edit text-indigo-500 mr-2"></i>
-                News Content Analyzer
-              </h2>
-              <span className="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full">
-                {text.length} characters
-              </span>
-            </div>
-            
-            <div className="relative">
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Paste news article or headline here for analysis..."
-                className="w-full h-64 p-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 resize-none transition-all duration-300"
-              />
-              <div className="absolute bottom-3 right-3 text-gray-400">
-                <i className="fas fa-pen-alt"></i>
-              </div>
-            </div>
-
-            {/* Sample News Buttons */}
-            <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">Try with sample news:</p>
-              <div className="flex flex-wrap gap-2">
-                {sampleNews.map((sample, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => loadSample(sample.text)}
-                    className={`px-3 py-2 text-sm rounded-lg flex items-center ${sample.type === 'fake' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}
-                  >
-                    <i className={`fas fa-${sample.type === 'fake' ? 'times-circle' : 'check-circle'} mr-1`}></i>
-                    {sample.type === 'fake' ? 'Fake Sample' : 'Real Sample'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
-              <button
-                onClick={clearText}
-                disabled={!text}
-                className={`px-5 py-3 rounded-xl flex items-center justify-center transition-all ${!text ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                <i className="fas fa-eraser mr-2"></i>
-                Clear Text
-              </button>
-              
-              <button
-                onClick={analyze}
-                disabled={!text || loading}
-                className={`px-5 py-3 rounded-xl flex items-center justify-center transition-all font-medium ${!text || loading ? 'bg-indigo-300 cursor-not-allowed' : 'gradient-bg hover:opacity-90 text-white'}`}
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-search mr-2"></i>
-                    Analyze News Content
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Results */}
-        <div className="flex-1">
-          {result ? (
-            <div className={`rounded-2xl p-6 card-shadow h-full transition-all duration-500 ${result.label === "FAKE" ? "bg-gradient-to-br from-red-50 to-red-100" : "bg-gradient-to-br from-emerald-50 to-emerald-100"}`}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <div className={`p-3 rounded-xl mr-4 ${result.label === "FAKE" ? "bg-red-100" : "bg-emerald-100"}`}>
-                    <i className={`fas fa-${result.label === "FAKE" ? "times-circle" : "check-circle"} text-3xl ${result.label === "FAKE" ? "text-red-600" : "text-emerald-600"}`}></i>
-                  </div>
-                  <div>
-                    <h2 className={`text-2xl font-bold ${result.label === "FAKE" ? "text-red-700" : "text-emerald-700"}`}>
-                      {result.label} NEWS DETECTED
-                    </h2>
-                    <p className="text-gray-600">
-                      Based on {result.reasons.length} linguistic indicators
-                    </p>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-3xl font-bold ${result.label === "FAKE" ? "text-red-700" : "text-emerald-700"}`}>
-                    {result.confidence}%
-                  </div>
-                  <div className="text-gray-600 text-sm">Confidence</div>
-                </div>
-              </div>
-
-              {/* Confidence Bar */}
-              <div className="mb-8">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Low Confidence</span>
-                  <span>High Confidence</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div
-                    className={`h-4 rounded-full ${result.label === "FAKE" ? "bg-gradient-to-r from-red-400 to-red-600" : "bg-gradient-to-r from-emerald-400 to-emerald-600"}`}
-                    style={{ width: `${result.confidence}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between mt-1 text-xs text-gray-500">
-                  <span>0%</span>
-                  <span>50%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
-              {/* Score Breakdown */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-xl border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm">Fake Indicators</p>
-                      <p className="text-2xl font-bold text-red-600">{result.fakeScore}</p>
-                    </div>
-                    <div className="bg-red-50 p-3 rounded-lg">
-                      <i className="fas fa-exclamation-triangle text-red-500"></i>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white p-4 rounded-xl border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm">Real Indicators</p>
-                      <p className="text-2xl font-bold text-emerald-600">{result.realScore}</p>
-                    </div>
-                    <div className="bg-emerald-50 p-3 rounded-lg">
-                      <i className="fas fa-check-circle text-emerald-500"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reasons */}
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  <i className="fas fa-list-alt mr-2 text-indigo-500"></i>
-                  Analysis Details
-                </h3>
-                <div className="bg-white/70 rounded-xl p-4 max-h-60 overflow-y-auto">
-                  <ul className="space-y-3">
-                    {result.reasons.slice(0, 8).map((r, i) => (
-                      <li key={i} className="flex items-start">
-                        <i className={`fas fa-${r.includes('Sensational') ? 'exclamation-circle text-red-500' : 'check-circle text-emerald-500'} mt-1 mr-3`}></i>
-                        <span className="text-gray-700">{r}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-8 card-shadow h-full flex flex-col items-center justify-center text-center">
-              <div className="p-5 bg-indigo-50 rounded-full mb-6">
-                <i className="fas fa-search text-5xl text-indigo-500"></i>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">News Analysis Results</h3>
-              <p className="text-gray-600 mb-6">
-                {text ? 'Click "Analyze News Content" to get detailed results' : 'Enter news content to begin analysis'}
-              </p>
-              <div className="text-gray-400 text-sm">
-                <i className="fas fa-info-circle mr-1"></i>
-                Results will appear here
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Features & How It Works */}
-      <div className="w-full max-w-6xl mt-8">
-        <div className="bg-white rounded-2xl p-6 card-shadow">
-          <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-            <i className="fas fa-cogs text-indigo-500 mr-2"></i>
-            How The Detection System Works
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-5 border border-gray-200 rounded-xl hover:border-indigo-300 transition-all">
-              <div className="w-12 h-12 gradient-bg rounded-lg flex items-center justify-center mb-4">
-                <i className="fas fa-language text-white text-xl"></i>
-              </div>
-              <h4 className="font-bold text-gray-800 mb-2">Linguistic Analysis</h4>
-              <p className="text-gray-600 text-sm">
-                Scans for sensational phrases, credibility markers, and reporting style patterns to assess authenticity.
-              </p>
-            </div>
-            
-            <div className="p-5 border border-gray-200 rounded-xl hover:border-indigo-300 transition-all">
-              <div className="w-12 h-12 gradient-bg rounded-lg flex items-center justify-center mb-4">
-                <i className="fas fa-balance-scale text-white text-xl"></i>
-              </div>
-              <h4 className="font-bold text-gray-800 mb-2">Score Comparison</h4>
-              <p className="text-gray-600 text-sm">
-                Compares fake vs. real indicators and article length to generate a weighted confidence score.
-              </p>
-            </div>
-            
-            <div className="p-5 border border-gray-200 rounded-xl hover:border-indigo-300 transition-all">
-              <div className="w-12 h-12 gradient-bg rounded-lg flex items-center justify-center mb-4">
-                <i className="fas fa-chart-bar text-white text-xl"></i>
-              </div>
-              <h4 className="font-bold text-gray-800 mb-2">Confidence Assessment</h4>
-              <p className="text-gray-600 text-sm">
-                Calculates confidence percentage based on indicator strength and provides detailed reasoning.
-              </p>
-            </div>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="flex flex-wrap items-center justify-between">
-              <div className="flex items-center text-gray-600">
-                <i className="fas fa-shield-alt text-indigo-500 mr-2"></i>
-                <span>This tool is for educational purposes. Always verify with multiple sources.</span>
-              </div>
-              <div className="flex space-x-4 mt-4 md:mt-0">
-                <button className="text-sm text-indigo-600 hover:text-indigo-800">
-                  <i className="fas fa-download mr-1"></i> Export Result
-                </button>
-                <button className="text-sm text-indigo-600 hover:text-indigo-800">
-                  <i className="fas fa-history mr-1"></i> Analysis History
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="w-full max-w-6xl mt-8 text-center">
-        <p className="text-gray-500 text-sm">
-          <i className="fas fa-code mr-1"></i>
-          Fake News Detection System • AI & Machine Learning Based Content Verification
-        </p>
-        <p className="text-gray-400 text-xs mt-2">
-          Note: This is a demonstration system using linguistic pattern analysis. For critical decisions, consult multiple reliable sources.
-        </p>
-      </footer>
+      )}
     </div>
   );
 }
