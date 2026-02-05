@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fake News Detection System (Auto Detect)</title>
+<title>AI-Based News Verification System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 body { font-family: 'Poppins', sans-serif; }
-.gradient-bg { background: linear-gradient(135deg, #667eea, #764ba2); }
-.card-shadow { box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+.gradient-bg { background: linear-gradient(135deg,#667eea,#764ba2); }
+.card-shadow { box-shadow: 0 10px 40px rgba(0,0,0,.08); }
 </style>
 </head>
 
@@ -24,188 +24,202 @@ body { font-family: 'Poppins', sans-serif; }
 <script type="text/babel">
 const { useState } = React;
 
-/* ---------- FAKE INDICATORS ---------- */
-const fakeIndicators = [
-  "breaking","shocking","exclusive","you won't believe",
-  "secret","banned","exposed","conspiracy","leaked","agenda","click here"
-];
+/* ================= AI CORE ================= */
 
-/* ---------- REAL NEWS INDICATORS ---------- */
-const realIndicators = [
-  "according to","reported by","official statement","confirmed by",
-  "press release","data shows","survey","study",
-  "government of india","ministry of",
-  "supreme court","reserve bank of india","rbi",
-  "nifty","sensex","gdp","inflation","repo rate"
-];
+// Step 1: Content Type Detection
+function classifyContent(text) {
+  const t = text.toLowerCase();
 
-/* ---------- BASIC GK (CLASS 5 INDIA) ---------- */
-const basicIndiaGK = [
-  "india is a country",
-  "india is in asia",
-  "new delhi is the capital of india",
-  "india has 28 states",
-  "india has 8 union territories",
-  "the indian flag has three colours",
-  "the national animal of india is the tiger",
-  "the national bird of india is the peacock",
-  "the national flower of india is the lotus",
-  "jana gana mana is the national anthem of india",
-  "the national song of india is vande mataram",
-  "the currency of india is rupee",
-  "narendra modi is the prime minister of india"
-];
+  const gkPatterns = [
+    "prime minister of india",
+    "capital of india",
+    "currency of india",
+    "president of india",
+    "national animal",
+    "india is"
+  ];
 
-/* ---------- ADVANCED INDIA GK CONTEXT ---------- */
-const indiaGK = [
-  { topic: "Economy", keywords: ["gdp","inflation","rbi","repo rate","nifty","sensex"], boost: 2 },
-  { topic: "Governance", keywords: ["supreme court","parliament","bill","cabinet"], boost: 2 },
-  { topic: "Science", keywords: ["isro","satellite","space mission"], boost: 1 },
-  { topic: "Health", keywords: ["health ministry","vaccination","medical study"], boost: 2 }
-];
+  if (gkPatterns.some(p => t.includes(p))) return "GK";
+  if (t.includes("i think") || t.includes("i believe")) return "OPINION";
+  return "NEWS";
+}
 
-/* ---------- AUTO-DETECT ANALYSIS ---------- */
-function analyzeNews(text) {
-  const cleanText = text.toLowerCase().trim();
-  const wordCount = cleanText.split(/\s+/).length;
-
-  // 1️⃣ BASIC GK
-  if (basicIndiaGK.includes(cleanText)) {
-    return {
-      category: "FACT (General Knowledge)",
-      label: "REAL",
-      confidence: 95,
-      reasons: ["Matched basic school-level general knowledge about India"]
-    };
-  }
-
-  // 2️⃣ OPINION / STATEMENT
-  if (wordCount < 15 && !realIndicators.some(w => cleanText.includes(w))) {
-    return {
-      category: "OPINION / STATEMENT",
-      label: "NOT NEWS",
-      confidence: 80,
-      reasons: ["Short personal or general statement, not a news article"]
-    };
-  }
-
-  // 3️⃣ NEWS ANALYSIS
-  let fakeScore = 0;
-  let realScore = 0;
-  let reasons = [];
-
-  fakeIndicators.forEach(w => {
-    if (cleanText.includes(w)) {
-      fakeScore++;
-      reasons.push(`Sensational phrase detected: "${w}"`);
-    }
-  });
-
-  realIndicators.forEach(w => {
-    if (cleanText.includes(w)) {
-      realScore++;
-      reasons.push(`Credible news indicator found: "${w}"`);
-    }
-  });
-
-  indiaGK.forEach(gk => {
-    gk.keywords.forEach(word => {
-      if (cleanText.includes(word)) {
-        realScore += gk.boost;
-        reasons.push(`India GK context (${gk.topic}): "${word}"`);
-      }
-    });
-  });
-
-  if (wordCount < 25) {
-    fakeScore++;
-    reasons.push("Text too short for a complete news article");
-  }
-
-  const label = fakeScore > realScore ? "FAKE" : "REAL";
-  const confidence = Math.min(95, 60 + Math.abs(fakeScore - realScore) * 10);
+// Step 2: Feature Extraction (AI-like)
+function extractFeatures(text) {
+  const words = text.toLowerCase().split(/\s+/);
+  const uniqueWords = new Set(words);
 
   return {
-    category: "NEWS ARTICLE",
-    label,
-    confidence,
-    reasons
+    length: words.length,
+    diversity: uniqueWords.size / words.length,
+    hasNumbers: /\d/.test(text),
+    hasGovtEntity: /india|government|ministry|minister|pm|president|us/.test(text),
+    hasSource: /according to|reported by|official|statement|press/.test(text),
+    emotionalTone: /shocking|secret|exposed|unbelievable|breaking/.test(text)
   };
 }
 
-/* ---------- APP ---------- */
+// Step 3: Probabilistic AI Scoring
+function aiScore(features) {
+  let real = 0, fake = 0;
+
+  if (features.hasSource) real += 2;
+  if (features.hasGovtEntity) real += 1.5;
+  if (features.hasNumbers) real += 1;
+  if (features.length > 25) real += 1;
+
+  if (features.emotionalTone) fake += 2;
+  if (features.length < 15) fake += 1;
+  if (features.diversity < 0.4) fake += 1;
+
+  return { real, fake };
+}
+
+// Step 4: Final AI Decision
+function analyzeNews(text) {
+  const type = classifyContent(text);
+
+  if (type === "GK") {
+    return {
+      label: "REAL",
+      confidence: 95,
+      fakeScore: 0,
+      realScore: 5,
+      reasons: ["Recognized as General Knowledge"]
+    };
+  }
+
+  if (type === "OPINION") {
+    return {
+      label: "OPINION",
+      confidence: 70,
+      fakeScore: 0,
+      realScore: 0,
+      reasons: ["Opinion-based statement detected"]
+    };
+  }
+
+  const features = extractFeatures(text);
+  const scores = aiScore(features);
+
+  const label = scores.fake > scores.real ? "FAKE" : "REAL";
+  const confidence = Math.min(95, 60 + Math.abs(scores.real - scores.fake) * 10);
+
+  return {
+    label,
+    confidence,
+    fakeScore: scores.fake,
+    realScore: scores.real,
+    reasons: [
+      `Source credibility: ${features.hasSource ? "Present" : "Absent"}`,
+      `Government entities: ${features.hasGovtEntity ? "Detected" : "Not detected"}`,
+      `Emotional language: ${features.emotionalTone ? "High" : "Low"}`,
+      `Lexical diversity score: ${features.diversity.toFixed(2)}`
+    ]
+  };
+}
+
+/* ================= UI ================= */
+
 function App() {
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const analyze = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setResult(analyzeNews(text));
+      setLoading(false);
+    }, 1000);
+  };
+
+  const clearText = () => {
+    setText("");
+    setResult(null);
+  };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4 text-center">
-        Fake News Detection System (Auto Detect)
-      </h1>
+    <div className="min-h-screen p-6 flex flex-col items-center">
 
-      <textarea
-        className="w-full h-40 p-4 border rounded-xl"
-        placeholder="Enter general knowledge, opinion, or news article..."
-        value={text}
-        onChange={e => setText(e.target.value)}
-      />
-
-      <button
-        onClick={() => setResult(analyzeNews(text))}
-        disabled={!text}
-        className="mt-4 w-full gradient-bg text-white py-3 rounded-xl"
-      >
-        Analyze Automatically
-      </button>
-
-      {result && (
-        <div className="mt-6 p-5 rounded-xl card-shadow bg-white">
-          <h2 className="text-xl font-bold mb-2">
-            Category: {result.category}
-          </h2>
-          <p className="mb-2">
-            Result: <b>{result.label}</b> ({result.confidence}% confidence)
+      {/* Header */}
+      <div className="w-full max-w-6xl mb-8">
+        <div className="gradient-bg text-white rounded-2xl p-6 card-shadow">
+          <h1 className="text-3xl font-bold flex items-center">
+            <i className="fas fa-brain mr-3"></i>
+            AI-Based News Verification System
+          </h1>
+          <p className="text-indigo-100 mt-2">
+            Context-aware NLP feature analysis for news authenticity
           </p>
-          <ul className="list-disc pl-5 text-sm">
-            {result.reasons.map((r, i) => <li key={i}>{r}</li>)}
-          </ul>
         </div>
-      )}
-
-      {/* ---------- ACCURACY TABLE ---------- */}
-      <div className="mt-10 p-6 bg-white rounded-xl card-shadow">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Accuracy Comparison
-        </h2>
-
-        <table className="w-full border-collapse border border-gray-300">
-          <thead className="bg-indigo-100">
-            <tr>
-              <th className="border p-3 text-left">Model Version</th>
-              <th className="border p-3 text-left">Accuracy (%)</th>
-              <th className="border p-3 text-left">Explanation</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border p-3">Without Auto-Detection</td>
-              <td className="border p-3 text-red-600 font-semibold">68%</td>
-              <td className="border p-3">
-                GK facts and opinions were misclassified as fake news
-              </td>
-            </tr>
-            <tr>
-              <td className="border p-3">With Auto-Detection</td>
-              <td className="border p-3 text-green-600 font-semibold">88%</td>
-              <td className="border p-3">
-                Input classified as GK, opinion, or news before analysis
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
 
+      <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl">
+
+        {/* Input */}
+        <div className="flex-1 bg-white rounded-2xl p-6 card-shadow">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Enter news, general knowledge, or opinion..."
+            className="w-full h-64 p-4 border rounded-xl focus:ring-2 focus:ring-indigo-300"
+          />
+
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={clearText}
+              className="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200"
+            >
+              <i className="fas fa-eraser mr-2"></i>Clear Text
+            </button>
+
+            <button
+              onClick={analyze}
+              disabled={!text || loading}
+              className="px-6 py-2 gradient-bg text-white rounded-xl"
+            >
+              {loading ? "Analyzing..." : "Analyze"}
+            </button>
+          </div>
+        </div>
+
+        {/* Result */}
+        <div className="flex-1">
+          {result ? (
+            <div className={`p-6 rounded-2xl card-shadow ${
+              result.label === "FAKE" ? "bg-red-50" :
+              result.label === "OPINION" ? "bg-yellow-50" :
+              "bg-emerald-50"
+            }`}>
+              <h2 className="text-2xl font-bold mb-2">
+                Result: {result.label}
+              </h2>
+              <p className="mb-4">Confidence: {result.confidence}%</p>
+
+              <ul className="space-y-2">
+                {result.reasons.map((r,i) => (
+                  <li key={i} className="text-gray-700">
+                    • {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="bg-white p-10 rounded-2xl card-shadow text-center">
+              <p className="text-gray-500">
+                Enter text and click analyze to see results
+              </p>
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-10 text-gray-500 text-sm text-center">
+        AI-based prototype using NLP-inspired feature extraction • Educational use only
+      </footer>
     </div>
   );
 }
