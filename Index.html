@@ -1,80 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Fake News Detection System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-  body { font-family: 'Poppins', sans-serif; }
-  .gradient-bg { background: linear-gradient(135deg, #667eea, #764ba2); }
-  .card-shadow { box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
-</style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 min-h-screen">
+<body class="bg-slate-100 min-h-screen">
 <div id="root"></div>
 
 <script type="text/babel">
 const { useState } = React;
 
-/* ================= INDICATORS ================= */
+/* =====================================================
+   🔴 FAKE NEWS INDICATORS
+   (Looks REAL but fails BASIC GK / LOGIC / PROCESS)
+===================================================== */
 
-/* 🔴 FAKE NEWS INDICATORS (100+) */
 const fakeIndicators = [
-  "breaking","shocking","exclusive","you won't believe","unbelievable",
-  "mind blowing","jaw dropping","must watch","goes viral","watch till end",
-  "secret","hidden truth","they don't want you to know","cover-up",
-  "conspiracy","agenda","deep state","elite","shadow government",
-  "false flag","brainwashing","manipulated","fabricated",
-  "experts say","scientists claim","doctors warn","sources reveal",
-  "anonymous source","leaked document","classified","whistleblower",
-  "click here","share now","forward this","send to everyone",
-  "before it's deleted","limited time","act fast","don't ignore",
-  "always","never","everyone knows","no one talks about",
-  "100% proof","guaranteed","undeniable truth",
-  "traitor","anti-national","foreign funded",
-  "rigged election","massive fraud",
-  "miracle cure","instant cure","no side effects",
-  "doctors hate this","one simple trick",
-  "covid hoax","vaccine kills",
-  "all caps","!!!","??",
-  "viral post","whatsapp forward","telegram message",
-  "fear spreads","panic","chaos everywhere",
-  "media won't show","mainstream media lies"
+  // Vague authority
+  "sources said",
+  "officials believe",
+  "people familiar with matter",
+  "highly placed sources",
+  "sources in the know",
+  "it is learnt that",
+
+  // Missing accountability
+  "no official confirmation",
+  "details were not shared",
+  "identity not disclosed",
+  "authority not named",
+
+  // Institutional mismatch (GK failures)
+  "rbi announced health advisory",
+  "supreme court launched scheme",
+  "president passed the bill",
+  "police announced economic policy",
+  "education ministry imposed lockdown",
+  "who approved indian law",
+
+  // Legal & process ignorance
+  "law implemented immediately",
+  "policy enforced overnight",
+  "court ordered nationwide ban instantly",
+  "rule changed without amendment",
+  "decision taken without gazette",
+
+  // Timeline impossibility
+  "bill passed and implemented same day",
+  "nationwide survey conducted in one day",
+  "results declared before examination",
+  "policy approved within hours",
+
+  // Numbers without logic
+  "large number of people affected",
+  "huge amount involved",
+  "record number reported",
+  "massive impact expected",
+
+  // Missing basics
+  "date not specified",
+  "location not mentioned",
+  "department not clarified",
+  "authority unclear",
+
+  // Overgeneralisation
+  "applies to entire country",
+  "mandatory for all citizens",
+  "everyone will be affected",
+
+  // Scientific weakness
+  "experts believe without data",
+  "study details unavailable",
+  "research not published",
+
+  // Education GK errors
+  "cbse announced university results",
+  "ugc conducted board exams",
+  "nta changed syllabus mid exam",
+
+  // Economic misunderstanding
+  "rbi fixed petrol prices",
+  "government controls stock market",
+  "inflation caused by single event",
+
+  // International misunderstanding
+  "un approved indian budget",
+  "foreign court ordered india",
+
+  // Opinion disguised as fact
+  "clearly proves",
+  "undeniably shows",
+  "raises serious doubts"
 ];
 
-/* 🟢 REAL NEWS INDICATORS (100+) */
+/* =====================================================
+   🟢 REAL NEWS INDICATORS
+   (GK-Correct, Institutional, Professional)
+===================================================== */
+
 const realIndicators = [
-  "according to","as per","reported by","confirmed by",
-  "official statement","press release","government said",
-  "ministry stated","police said","court observed",
-  "world health organization","who","united nations","un",
-  "supreme court","high court","ministry of health",
-  "reserve bank","rbi","imf","world bank","cdc",
-  "study","research","survey","analysis",
-  "data shows","statistics indicate","peer-reviewed",
-  "clinical trial","sample size","methodology",
-  "findings suggest","results show",
-  "allegedly","reportedly","under investigation",
-  "ongoing inquiry","no confirmation yet",
-  "on monday","on tuesday","last week","earlier this year",
-  "in 2024","in 2025","in new delhi","in washington",
-  "said in a statement","in an interview",
-  "court order","legal notice","regulatory authority",
-  "policy decision","bill passed","amendment",
-  "fact-checked","verified sources","editorial standards",
-  "correction issued","updated report",
-  "objective analysis","neutral assessment","balanced view"
+  // Proper authority
+  "according to the ministry",
+  "official notification stated",
+  "press release issued by",
+  "government order said",
+
+  // Institutional correctness
+  "ministry of home affairs",
+  "ministry of health and family welfare",
+  "reserve bank of india said",
+  "election commission of india said",
+  "supreme court bench observed",
+  "high court noted",
+
+  // Legal process
+  "bill was introduced in parliament",
+  "bill was passed in lok sabha",
+  "gazette notification issued",
+  "amendment notified",
+
+  // Timeline clarity
+  "will come into effect from",
+  "effective from april",
+  "starting next financial year",
+  "after cabinet approval",
+
+  // Data clarity
+  "as per official data",
+  "figures released by",
+  "statistics show",
+  "report published on",
+
+  // Scientific validity
+  "peer reviewed study",
+  "clinical trial data",
+  "research published in journal",
+
+  // Balanced reporting
+  "however officials clarified",
+  "meanwhile authorities said",
+  "no immediate impact expected",
+
+  // Education accuracy
+  "cbse class 10 results",
+  "ugc guidelines for universities",
+  "nta conducted the examination",
+
+  // Economic accuracy
+  "rbi monetary policy committee",
+  "inflation measured by cpi",
+  "budget presented in parliament",
+
+  // Jurisdiction correctness
+  "state government order",
+  "applies within jurisdiction",
+  "subject to review",
+
+  // International correctness
+  "bilateral talks",
+  "diplomatic engagement",
+  "joint statement issued"
 ];
 
-/* ================= ANALYSIS FUNCTION ================= */
+/* =====================================================
+   🧠 ANALYSIS LOGIC (GK + STRUCTURE)
+===================================================== */
 
 function analyzeNews(text) {
   const t = text.toLowerCase();
@@ -82,23 +179,24 @@ function analyzeNews(text) {
   let realScore = 0;
   let reasons = [];
 
-  fakeIndicators.forEach(word => {
-    if (t.includes(word)) {
+  fakeIndicators.forEach(i => {
+    if (t.includes(i)) {
       fakeScore++;
-      reasons.push(`Fake indicator detected: "${word}"`);
+      reasons.push(`Logical/GK weakness detected: "${i}"`);
     }
   });
 
-  realIndicators.forEach(word => {
-    if (t.includes(word)) {
+  realIndicators.forEach(i => {
+    if (t.includes(i)) {
       realScore++;
-      reasons.push(`Real indicator detected: "${word}"`);
+      reasons.push(`Professional reporting indicator: "${i}"`);
     }
   });
 
-  if (text.split(/\s+/).length < 25) {
+  // Very short news = headline-only
+  if (text.split(/\s+/).length < 35) {
     fakeScore++;
-    reasons.push("Article is unusually short");
+    reasons.push("Insufficient contextual detail");
   }
 
   const label = fakeScore > realScore ? "FAKE" : "REAL";
@@ -107,52 +205,61 @@ function analyzeNews(text) {
   return { label, confidence, fakeScore, realScore, reasons };
 }
 
-/* ================= APP ================= */
+/* =====================================================
+   🖥️ APP UI
+===================================================== */
 
 function App() {
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const analyze = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setResult(analyzeNews(text));
-      setLoading(false);
-    }, 1000);
-  };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4 text-indigo-700">
+    <div className="max-w-5xl mx-auto p-6">
+      <h1 className="text-3xl font-bold text-indigo-700 mb-4">
         Fake News Detection System
       </h1>
 
+      <p className="text-gray-600 mb-4">
+        Detects fake news written in professional newspaper style by checking
+        basic general knowledge, authority, logic, and process.
+      </p>
+
       <textarea
         className="w-full h-48 p-4 border rounded-lg"
-        placeholder="Paste news text here..."
+        placeholder="Paste Times of India / newspaper-style news here..."
         value={text}
         onChange={e => setText(e.target.value)}
       />
 
       <button
-        onClick={analyze}
-        disabled={!text || loading}
-        className="mt-4 px-6 py-3 rounded-lg text-white gradient-bg"
+        onClick={() => setResult(analyzeNews(text))}
+        className="mt-4 px-6 py-3 bg-indigo-600 text-white rounded-lg"
+        disabled={!text}
       >
-        {loading ? "Analyzing..." : "Analyze News"}
+        Analyze News
       </button>
 
       {result && (
-        <div className="mt-6 p-5 bg-white rounded-xl card-shadow">
-          <h2 className="text-xl font-bold">
-            Result: <span className={result.label === "FAKE" ? "text-red-600" : "text-green-600"}>
+        <div className="mt-6 bg-white p-5 rounded-xl shadow">
+          <h2 className="text-xl font-bold mb-2">
+            Result:
+            <span className={result.label === "FAKE" ? "text-red-600 ml-2" : "text-green-600 ml-2"}>
               {result.label}
             </span>
           </h2>
-          <p>Confidence: {result.confidence}%</p>
-          <p>Fake Score: {result.fakeScore}</p>
-          <p>Real Score: {result.realScore}</p>
+
+          <p>Confidence: <b>{result.confidence}%</b></p>
+          <p>Fake Indicators: {result.fakeScore}</p>
+          <p>Real Indicators: {result.realScore}</p>
+
+          <div className="mt-3">
+            <h3 className="font-semibold">Analysis Details:</h3>
+            <ul className="list-disc pl-5 text-sm text-gray-700">
+              {result.reasons.slice(0, 6).map((r, i) => (
+                <li key={i}>{r}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
